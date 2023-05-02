@@ -48,3 +48,38 @@ func GetUser(c *gin.Context) {
 		"user": user,
 	})
 }
+
+func UpdateUser(c *gin.Context) {
+	var body struct {
+		Name     string
+		Password string
+	}
+
+	c.Bind(&body)
+
+	id := c.Param("id")
+
+	var user models.User
+	postgres.DB.First(&user, id)
+
+	postgres.DB.Model(&user).Updates(models.User{
+		Name: body.Name,
+	})
+
+	c.JSON(200, gin.H{
+		"user": user,
+	})
+}
+
+func DeleteUser(c *gin.Context) {
+
+	id := c.Param("id")
+
+	var user models.User
+
+	postgres.DB.Delete(&user, id)
+
+	c.JSON(200, gin.H{
+		"user": user,
+	})
+}

@@ -18,6 +18,8 @@ func CreateRouter(r *gin.Engine) *gin.Engine {
 		main.POST("/createUser", controllers.CreateUser)
 		main.GET("/getAll", controllers.GetAllUsers)
 		main.GET("/getUser/:id", controllers.GetUser)
+		main.PUT("/updateUser/:id", controllers.UpdateUser)
+		main.DELETE("/deleteUser/:id", controllers.DeleteUser)
 	}
 
 	return r
