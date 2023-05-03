@@ -15,11 +15,15 @@ func CreateRouter(r *gin.Engine) *gin.Engine {
 				"message": "ok",
 			})
 		})
-		main.POST("/createUser", controllers.CreateUser)
-		main.GET("/getAll", controllers.GetAllUsers)
+		main.POST("/register", controllers.CreateUser)
 		main.GET("/getUser/:id", controllers.GetUser)
 		main.PUT("/updateUser/:id", controllers.UpdateUser)
-		main.DELETE("/deleteUser/:id", controllers.DeleteUser)
+		admin := main.Group("admin")
+		{
+			admin.GET("getAll", controllers.GetAllUsers)
+			admin.DELETE("/deleteUser/:id", controllers.DeleteUser)
+
+		}
 	}
 
 	return r

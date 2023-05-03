@@ -1,25 +1,23 @@
 package postgres
 
 import (
-	"log"
+	"database/sql"
 	"os"
 
-	"github.com/eduardotvn/projeto-api/src/models"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	_ "github.com/lib/pq"
 )
 
-var DB *gorm.DB
+func DBConnect() (*sql.DB, error) {
+	psqlconn := os.Getenv("DB_STRING")
 
-func DbConnect() {
-	var err error
-	dsn := os.Getenv("DB_STRING")
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
+	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
-		log.Fatal("Failed to connect to database")
+		return nil, err
 	}
 
-	DB.AutoMigrate(&models.User{})
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
 
+	return db, nil
 }

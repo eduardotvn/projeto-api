@@ -11,7 +11,7 @@ import (
 
 func init() {
 	envInitializer.LoadEnvVar()
-	postgres.DbConnect()
+	postgres.DBConnect()
 }
 
 func main() {

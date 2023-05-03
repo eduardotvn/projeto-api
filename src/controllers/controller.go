@@ -1,85 +1,124 @@
 package controllers
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/eduardotvn/projeto-api/repos"
+	"github.com/eduardotvn/projeto-api/response"
 	"github.com/eduardotvn/projeto-api/src/models"
 	"github.com/eduardotvn/projeto-api/src/postgres"
 	"github.com/gin-gonic/gin"
 )
 
 func CreateUser(c *gin.Context) {
-	var body struct {
-		Name     string
-		Password string
-	}
+	bodyRequest, err := ioutil.ReadAll(c.Request.Body)
 
-	c.Bind(&body)
-
-	user := models.User{Name: body.Name, Password: body.Password}
-
-	result := postgres.DB.Create(&user)
-
-	if result.Error != nil {
-		c.Status(400)
+	if err != nil {
+		response.Error(c.Writer, http.StatusUnprocessableEntity, err)
 		return
 	}
 
-	c.JSON(200, gin.H{
-		"user": user,
-	})
+	var user models.User
+	if err = json.Unmarshal(bodyRequest, &user); err != nil {
+		response.Error(c.Writer, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := postgres.DBConnect()
+	if err != nil {
+		response.Error(c.Writer, http.StatusInternalServerError, err)
+		return
+	}
+
+	repos := repos.NewRepo(db)
+	_, err = repos.Create(user)
+	if err != nil {
+		fmt.Println(err)
+		response.Error(c.Writer, http.StatusInternalServerError, err)
+		return
+	}
+
+	response.JSON(c.Writer, http.StatusCreated, user)
 }
 
 func GetAllUsers(c *gin.Context) {
 
-	var users []models.User
+	db, err := postgres.DBConnect()
+	if err != nil {
+		response.Error(c.Writer, http.StatusInternalServerError, err)
+		return
+	}
+	repos := repos.NewRepo(db)
+	users, err := repos.GetAll()
+	if err != nil {
+		fmt.Println(err)
+		response.Error(c.Writer, http.StatusInternalServerError, err)
+		return
+	}
 
-	postgres.DB.Find(&users)
-
-	c.JSON(200, gin.H{
-		"users": users,
-	})
+	response.JSON(c.Writer, http.StatusAccepted, users)
 }
 
 func GetUser(c *gin.Context) {
-	var user models.User
 	id := c.Param("id")
-	postgres.DB.First(&user, id)
 
-	c.JSON(200, gin.H{
-		"user": user,
-	})
+	db, err := postgres.DBConnect()
+	if err != nil {
+		response.Error(c.Writer, http.StatusInternalServerError, err)
+		return
+	}
+
+	defer db.Close()
+
+	repos := repos.NewRepo(db)
+
+	user, err := repos.GetUserByID(id)
+	if err != nil {
+		response.Error(c.Writer, http.StatusBadRequest, err)
+		return
+	}
+
+	response.JSON(c.Writer, http.StatusOK, user)
 }
 
 func UpdateUser(c *gin.Context) {
-	var body struct {
-		Name     string
-		Password string
+
+	bodyRequest, err := ioutil.ReadAll(c.Request.Body)
+
+	if err != nil {
+		response.Error(c.Writer, http.StatusUnprocessableEntity, err)
+		return
 	}
 
-	c.Bind(&body)
-
-	id := c.Param("id")
+	//id := c.Param("id")
 
 	var user models.User
-	postgres.DB.First(&user, id)
+	if err = json.Unmarshal(bodyRequest, &user); err != nil {
+		response.Error(c.Writer, http.StatusBadRequest, err)
+		return
+	}
 
-	postgres.DB.Model(&user).Updates(models.User{
-		Name: body.Name,
-	})
-
-	c.JSON(200, gin.H{
-		"user": user,
-	})
 }
 
 func DeleteUser(c *gin.Context) {
 
 	id := c.Param("id")
+	db, err := postgres.DBConnect()
+	if err != nil {
+		response.Error(c.Writer, http.StatusInternalServerError, err)
+		return
+	}
 
-	var user models.User
+	defer db.Close()
 
-	postgres.DB.Delete(&user, id)
+	repos := repos.NewRepo(db)
+	if err := repos.DeleteUserById(id); err != nil {
+		response.Error(c.Writer, http.StatusBadRequest, err)
+		return
+	}
 
-	c.JSON(200, gin.H{
-		"user": user,
-	})
+	response.JSON(c.Writer, 200, nil)
 }
