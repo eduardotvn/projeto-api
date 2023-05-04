@@ -16,8 +16,9 @@ func CreateRouter(r *gin.Engine) *gin.Engine {
 			})
 		})
 		main.POST("/register", controllers.CreateUser)
+		main.POST("/login", controllers.LoginUser)
 		main.GET("/getUser/:id", controllers.GetUser)
-		main.PUT("/updateUser/:id", controllers.UpdateUser)
+		main.PUT("/updateUser/:id", controllers.UpdateUserPassword)
 		admin := main.Group("admin")
 		{
 			admin.GET("getAll", controllers.GetAllUsers)

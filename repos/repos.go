@@ -107,3 +107,18 @@ func (repos Users) DeleteUserById(id string) error {
 
 	return nil
 }
+
+func (repos Users) UpdateUserById(newPassword, id string) (sql.Result, error) {
+	statement, err := repos.db.Prepare("UPDATE Users SET password = $1, updated_at = $2 WHERE id = $3")
+	if err != nil {
+		return nil, err
+	}
+	defer statement.Close()
+
+	updatedUserPassword, err := statement.Exec(newPassword, time.Now(), id)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedUserPassword, nil
+}

@@ -84,7 +84,7 @@ func GetUser(c *gin.Context) {
 	response.JSON(c.Writer, http.StatusOK, user)
 }
 
-func UpdateUser(c *gin.Context) {
+func UpdateUserPassword(c *gin.Context) {
 
 	bodyRequest, err := ioutil.ReadAll(c.Request.Body)
 
@@ -93,14 +93,33 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	//id := c.Param("id")
+	id := c.Param("id")
 
-	var user models.User
-	if err = json.Unmarshal(bodyRequest, &user); err != nil {
+	var newPassword struct {
+		Password string
+	}
+
+	if err = json.Unmarshal(bodyRequest, &newPassword); err != nil {
 		response.Error(c.Writer, http.StatusBadRequest, err)
 		return
 	}
 
+	db, err := postgres.DBConnect()
+	if err != nil {
+		response.Error(c.Writer, http.StatusInternalServerError, err)
+		return
+	}
+
+	defer db.Close()
+
+	repos := repos.NewRepo(db)
+	updatedUser, err := repos.UpdateUserById(newPassword.Password, id)
+	if err != nil {
+		response.Error(c.Writer, http.StatusBadRequest, err)
+		return
+	}
+
+	response.JSON(c.Writer, http.StatusOK, updatedUser)
 }
 
 func DeleteUser(c *gin.Context) {
