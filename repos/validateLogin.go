@@ -1,6 +1,9 @@
 package repos
 
 func (repos Users) ValidateLogin(name, password string) (bool, error) {
+
+	//APENAS PARA TESTE, HASH SERÁ ADICIONADO AO PASSWORD PARA PROTEÇÃO DO USUÁRIO
+
 	result, err := repos.db.Query("SELECT name, password FROM Users WHERE name = $1 AND password = $2", name, password)
 	if err != nil {
 		return false, err

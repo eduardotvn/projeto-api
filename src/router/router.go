@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// EM CONSTRUÇÃO E EVOLUÇÃO
 func CreateRouter(r *gin.Engine) *gin.Engine {
 	main := r.Group("")
 	{

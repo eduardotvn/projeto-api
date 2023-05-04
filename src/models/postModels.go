@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// ADICIONAR IMPLEMENTAÇÃO AUTOMÁTICA DO VALOR DO ID
 type User struct {
 	ID        uint      `json:"id" primaryKey:"true"`
 	CreatedAt time.Time `json:"created_at"`

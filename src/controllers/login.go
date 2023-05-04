@@ -12,6 +12,9 @@ import (
 )
 
 func LoginUser(c *gin.Context) {
+
+	//APENAS PARA TESTE, HASH SERÁ ADICIONADO AO PASSWORD PARA PROTEÇÃO DO USUÁRIO
+
 	bodyRequest, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		response.Error(c.Writer, http.StatusUnprocessableEntity, err)
