@@ -32,8 +32,15 @@ func CreateUser(c *gin.Context) {
 		response.Error(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
+	defer db.Close()
 
 	repos := repos.NewRepo(db)
+	_, err = repos.ValidateEmail(user.Email)
+	if err != nil {
+		fmt.Println(err)
+		response.Error(c.Writer, http.StatusBadRequest, err)
+		return
+	}
 	_, err = repos.Create(user)
 	if err != nil {
 		fmt.Println(err)
@@ -44,6 +51,10 @@ func CreateUser(c *gin.Context) {
 	response.JSON(c.Writer, http.StatusCreated, user)
 }
 
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+
 func GetAllUsers(c *gin.Context) {
 
 	db, err := postgres.DBConnect()
@@ -51,6 +62,8 @@ func GetAllUsers(c *gin.Context) {
 		response.Error(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
+	defer db.Close()
+
 	repos := repos.NewRepo(db)
 	users, err := repos.GetAll()
 	if err != nil {
@@ -61,6 +74,10 @@ func GetAllUsers(c *gin.Context) {
 
 	response.JSON(c.Writer, http.StatusAccepted, users)
 }
+
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
 
 func GetUser(c *gin.Context) {
 	id := c.Param("id")
@@ -83,6 +100,10 @@ func GetUser(c *gin.Context) {
 
 	response.JSON(c.Writer, http.StatusOK, user)
 }
+
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
 
 func UpdateUserPassword(c *gin.Context) {
 
@@ -113,7 +134,7 @@ func UpdateUserPassword(c *gin.Context) {
 	defer db.Close()
 
 	repos := repos.NewRepo(db)
-	updatedUser, err := repos.UpdateUserById(newPassword.Password, id)
+	updatedUser, err := repos.UpdateUserPasswordById(newPassword.Password, id)
 	if err != nil {
 		response.Error(c.Writer, http.StatusBadRequest, err)
 		return
@@ -121,6 +142,10 @@ func UpdateUserPassword(c *gin.Context) {
 
 	response.JSON(c.Writer, http.StatusOK, updatedUser)
 }
+
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------*/
 
 func DeleteUser(c *gin.Context) {
 

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/eduardotvn/projeto-api/src/models"
+	"github.com/eduardotvn/projeto-api/src/security"
 )
 
 type Users struct {
@@ -16,7 +17,7 @@ func NewRepo(db *sql.DB) *Users {
 }
 
 func (repos Users) Create(user models.User) (sql.Result, error) {
-	statement, err := repos.db.Prepare("INSERT INTO Users (id, created_at, updated_at, deleted_at, name, password, admin) VALUES ($1, $2, $3, $4, $5, $6, $7)")
+	statement, err := repos.db.Prepare("INSERT INTO Users (created_at, updated_at, deleted_at, name, email, password, admin) VALUES ($1, $2, $3, $4, $5, $6, $7)")
 	if err != nil {
 		return nil, err
 	}
@@ -25,8 +26,12 @@ func (repos Users) Create(user models.User) (sql.Result, error) {
 	createdAt := time.Now()
 	updatedAt := createdAt
 	deletedAt := time.Time{}
+	user.Password, err = security.HashPassword(user.Password)
+	if err != nil {
+		return nil, err
+	}
 
-	createdUser, err := statement.Exec(user.ID, createdAt, updatedAt, deletedAt, user.Name, user.Password, user.Admin)
+	createdUser, err := statement.Exec(createdAt, updatedAt, deletedAt, user.Name, user.Email, user.Password, user.Admin)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +40,7 @@ func (repos Users) Create(user models.User) (sql.Result, error) {
 }
 
 func (repos Users) GetAll() ([]models.User, error) {
-	results, err := repos.db.Query("SELECT id, name, created_at, updated_at FROM Users")
+	results, err := repos.db.Query("SELECT id, name, email, created_at, updated_at FROM Users")
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +54,7 @@ func (repos Users) GetAll() ([]models.User, error) {
 		if err = results.Scan(
 			&user.ID,
 			&user.Name,
+			&user.Email,
 			&user.CreatedAt,
 			&user.UpdatedAt,
 		); err != nil {
@@ -66,7 +72,7 @@ func (repos Users) GetAll() ([]models.User, error) {
 }
 
 func (repos Users) GetUserByID(id string) (models.User, error) {
-	result, err := repos.db.Query("SELECT id, name, created_at, updated_at FROM Users WHERE id = $1", id)
+	result, err := repos.db.Query("SELECT id, name, email, created_at, updated_at FROM Users WHERE id = $1", id)
 	if err != nil {
 		return models.User{}, err
 	}
@@ -81,6 +87,7 @@ func (repos Users) GetUserByID(id string) (models.User, error) {
 		if err = result.Scan(
 			&tempUser.ID,
 			&tempUser.Name,
+			&tempUser.Email,
 			&tempUser.CreatedAt,
 			&tempUser.UpdatedAt,
 		); err != nil {
@@ -108,12 +115,17 @@ func (repos Users) DeleteUserById(id string) error {
 	return nil
 }
 
-func (repos Users) UpdateUserById(newPassword, id string) (sql.Result, error) {
+func (repos Users) UpdateUserPasswordById(newPassword, id string) (sql.Result, error) {
 	statement, err := repos.db.Prepare("UPDATE Users SET password = $1, updated_at = $2 WHERE id = $3")
 	if err != nil {
 		return nil, err
 	}
 	defer statement.Close()
+
+	newPassword, err = security.HashPassword(newPassword)
+	if err != nil {
+		return nil, err
+	}
 
 	updatedUserPassword, err := statement.Exec(newPassword, time.Now(), id)
 	if err != nil {

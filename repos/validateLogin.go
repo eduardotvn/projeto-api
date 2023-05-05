@@ -1,31 +1,36 @@
 package repos
 
-func (repos Users) ValidateLogin(name, password string) (bool, error) {
+import "github.com/eduardotvn/projeto-api/src/security"
 
-	//APENAS PARA TESTE, HASH SERÁ ADICIONADO AO PASSWORD PARA PROTEÇÃO DO USUÁRIO
+func (repos Users) ValidateLogin(email, password string) (bool, error) {
 
-	result, err := repos.db.Query("SELECT name, password FROM Users WHERE name = $1 AND password = $2", name, password)
+	result, err := repos.db.Query("SELECT email, password FROM Users WHERE name = $1 AND password = $2", email, password)
 	if err != nil {
 		return false, err
 	}
 	defer result.Close()
 
 	var temp struct {
-		Name     string
+		Email    string
 		Password string
 	}
 
 	for result.Next() {
 
 		if err = result.Scan(
-			&temp.Name,
+			&temp.Email,
 			&temp.Password,
 		); err != nil {
 			return false, err
 		}
 	}
 
-	if temp.Name == name && temp.Password == password {
+	password, err = security.HashPassword(password)
+	if err != nil {
+		return false, nil
+	}
+
+	if temp.Email == email && temp.Password == password {
 		return true, nil
 	} else {
 		return false, nil

@@ -13,8 +13,6 @@ import (
 
 func LoginUser(c *gin.Context) {
 
-	//APENAS PARA TESTE, HASH SERÁ ADICIONADO AO PASSWORD PARA PROTEÇÃO DO USUÁRIO
-
 	bodyRequest, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		response.Error(c.Writer, http.StatusUnprocessableEntity, err)
@@ -22,7 +20,7 @@ func LoginUser(c *gin.Context) {
 	}
 
 	var user struct {
-		Name     string
+		Email    string
 		Password string
 	}
 	if err = json.Unmarshal(bodyRequest, &user); err != nil {
@@ -39,7 +37,7 @@ func LoginUser(c *gin.Context) {
 	defer db.Close()
 
 	repos := repos.NewRepo(db)
-	loginResult, err := repos.ValidateLogin(user.Name, user.Password)
+	loginResult, err := repos.ValidateLogin(user.Email, user.Password)
 	if err != nil {
 		response.Error(c.Writer, http.StatusBadRequest, err)
 		return
