@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -45,13 +44,11 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	response.JSON(c.Writer, http.StatusOK, loginResult)
-
 	webToken, err := middlewares.GenerateWebToken(loginResult)
 	if err != nil {
 		response.Error(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
 
-	fmt.Println(webToken)
+	response.JSON(c.Writer, http.StatusOK, webToken)
 }

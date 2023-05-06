@@ -12,6 +12,7 @@ import (
 func init() {
 	envInitializer.LoadEnvVar()
 	postgres.DBConnect()
+	postgres.CreateTables()
 }
 
 func main() {

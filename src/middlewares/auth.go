@@ -20,7 +20,7 @@ func init() {
 	}
 }
 
-func parseToken(tokenString string) (*UserClaims, error) {
+func ParseToken(tokenString string) (*UserClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -39,7 +39,7 @@ func parseToken(tokenString string) (*UserClaims, error) {
 	}
 }
 
-func UserAuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -51,7 +51,7 @@ func UserAuthMiddleware() gin.HandlerFunc {
 
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
 
-		claims, err := parseToken(tokenString)
+		claims, err := ParseToken(tokenString)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": err.Error(),
@@ -66,42 +66,9 @@ func UserAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user", claims)
-
-		c.Next()
-	}
-}
-
-func AdminAuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "missing authorization header",
-			})
-			return
-		}
-
-		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-
-		claims, err := parseToken(tokenString)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		if !claims.Authorized {
+		if c.Request.URL.Path == "/admin" || strings.HasPrefix(c.Request.URL.Path, "/admin/") && !claims.AdminAuthorized {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "not authorized as user",
-			})
-			return
-		}
-
-		if !claims.AdminAuthorized {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "not an admin",
+				"error": "not authorized as admin",
 			})
 			return
 		}

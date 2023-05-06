@@ -20,13 +20,14 @@ func CreateRouter(r *gin.Engine) *gin.Engine {
 		main.POST("/register", controllers.CreateUser)
 		main.POST("/login", controllers.LoginUser)
 		user := main.Group("user")
-		user.Use(middlewares.UserAuthMiddleware())
+		user.Use(middlewares.AuthMiddleware())
 		{
 			user.GET("/getUser/:id", controllers.GetUser)
 			user.PUT("/updateUser/:id", controllers.UpdateUserPassword)
+			user.POST("/createPost", controllers.CreatePost)
 		}
 		admin := main.Group("admin")
-		admin.Use(middlewares.UserAuthMiddleware())
+		admin.Use(middlewares.AuthMiddleware())
 		{
 			admin.GET("getAll", controllers.GetAllUsers)
 			admin.DELETE("/deleteUser/:id", controllers.DeleteUser)
