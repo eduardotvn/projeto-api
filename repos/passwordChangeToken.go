@@ -7,11 +7,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 )
 
-func GenerateToken(id int) string {
+func GenerateToken(id string) string {
 	secretKey, err := hex.DecodeString(os.Getenv("SECRET_KEY"))
 	if err != nil {
 		fmt.Println(err)
@@ -20,7 +19,7 @@ func GenerateToken(id int) string {
 
 	expirationTime := time.Now().Add(1 * time.Hour)
 
-	message := []byte(strconv.Itoa(id) + expirationTime.Format(time.RFC3339))
+	message := []byte(id + expirationTime.Format(time.RFC3339))
 
 	hmac := hmac.New(sha256.New, secretKey)
 	hmac.Write(message)

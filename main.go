@@ -15,6 +15,7 @@ func init() {
 }
 
 func main() {
+
 	port := os.Getenv("PORT")
 	fmt.Println("Starting server in port:", port)
 	server := server.StartServer()

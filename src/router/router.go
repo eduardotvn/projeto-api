@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/eduardotvn/projeto-api/src/controllers"
+	"github.com/eduardotvn/projeto-api/src/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,9 +19,14 @@ func CreateRouter(r *gin.Engine) *gin.Engine {
 		})
 		main.POST("/register", controllers.CreateUser)
 		main.POST("/login", controllers.LoginUser)
-		main.GET("/getUser/:id", controllers.GetUser)
-		main.PUT("/updateUser/:id", controllers.UpdateUserPassword)
+		user := main.Group("user")
+		user.Use(middlewares.UserAuthMiddleware())
+		{
+			user.GET("/getUser/:id", controllers.GetUser)
+			user.PUT("/updateUser/:id", controllers.UpdateUserPassword)
+		}
 		admin := main.Group("admin")
+		admin.Use(middlewares.UserAuthMiddleware())
 		{
 			admin.GET("getAll", controllers.GetAllUsers)
 			admin.DELETE("/deleteUser/:id", controllers.DeleteUser)

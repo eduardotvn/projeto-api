@@ -1,38 +1,39 @@
 package repos
 
-import "github.com/eduardotvn/projeto-api/src/security"
+import (
+	"fmt"
 
-func (repos Users) ValidateLogin(email, password string) (bool, error) {
+	"github.com/eduardotvn/projeto-api/src/middlewares"
+	"github.com/eduardotvn/projeto-api/src/security"
+)
 
-	result, err := repos.db.Query("SELECT email, password FROM Users WHERE name = $1 AND password = $2", email, password)
+func (repos Users) ValidateLogin(email, password string) (middlewares.UserLoginInformation, error) {
+	var user middlewares.UserLoginInformation
+	result, err := repos.db.Query("SELECT id, name, email, password, admin FROM Users WHERE email = $1", email)
 	if err != nil {
-		return false, err
+		return middlewares.UserLoginInformation{}, err
 	}
 	defer result.Close()
 
-	var temp struct {
-		Email    string
-		Password string
-	}
+	var hashedPassword string
 
 	for result.Next() {
 
 		if err = result.Scan(
-			&temp.Email,
-			&temp.Password,
+			&user.ID,
+			&user.Name,
+			&user.Email,
+			&hashedPassword,
+			&user.Admin,
 		); err != nil {
-			return false, err
+			return middlewares.UserLoginInformation{}, err
 		}
 	}
 
-	password, err = security.HashPassword(password)
+	_, err = security.ValidatePassword(password, hashedPassword)
 	if err != nil {
-		return false, nil
-	}
-
-	if temp.Email == email && temp.Password == password {
-		return true, nil
+		return middlewares.UserLoginInformation{}, fmt.Errorf("Wrong Password")
 	} else {
-		return false, nil
+		return user, nil
 	}
 }

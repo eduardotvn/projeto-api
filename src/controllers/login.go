@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/eduardotvn/projeto-api/repos"
 	"github.com/eduardotvn/projeto-api/response"
+	"github.com/eduardotvn/projeto-api/src/middlewares"
 	"github.com/eduardotvn/projeto-api/src/postgres"
 	"github.com/gin-gonic/gin"
 )
@@ -44,4 +46,12 @@ func LoginUser(c *gin.Context) {
 	}
 
 	response.JSON(c.Writer, http.StatusOK, loginResult)
+
+	webToken, err := middlewares.GenerateWebToken(loginResult)
+	if err != nil {
+		response.Error(c.Writer, http.StatusInternalServerError, err)
+		return
+	}
+
+	fmt.Println(webToken)
 }
